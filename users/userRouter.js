@@ -3,8 +3,14 @@ const USER_DB = require('./userDb');
 
 const router = express.Router();
 
-router.post('/', validateUser, (req, res) => {
-
+router.post('/', validateUser, async (req, res) => {
+    try {
+        const post = await USER_DB.insert(req.name);
+        res.status(201).json(post);
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ message: 'Post was unsuccessful' });
+    }
 });
 
 router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
@@ -16,6 +22,7 @@ router.get('/', async (req, res) => {
         const users = await USER_DB.get();
         res.status(200).json(users);
     } catch(err) {
+        console.log(err);
         res.status(500).json({ message: 'Error retrieving users!' });
     }
 });
@@ -24,17 +31,25 @@ router.get('/:id', validateUserId, async (req, res) => {
     try {
         const { id } = await USER_DB.getById(req.params.id);
         if(id) {
-            res.status(200).json(id);
+            res.status(200).json(req.user);
         } else {
             res.status(404).json({ message: `User with ID: ${id} could not be found`});
         }
     } catch(err) {
+        console.log(err);
         res.status(500).json({ message: 'Could not retrieve the user with that ID' });
     }
 });
 
-router.get('/:id/posts', validateUserId, (req, res) => {
+router.get('/:id/posts', validateUserId, async (req, res) => {
+    try {
+        const posts = await USER_DB.getUserPosts(req.params.id);
 
+        res.status(200).json(posts);
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ message: 'Could not retrieve posts for that user.' });
+    }
 });
 
 router.delete('/:id', validateUserId, (req, res) => {
@@ -59,6 +74,7 @@ async function validateUserId(req, res, next) {
             next();
         }
     } catch(err) {
+        console.log(err);
         res.status(500).json({ message: 'Error validating user.' });
     }
 };
