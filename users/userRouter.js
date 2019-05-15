@@ -52,12 +52,32 @@ router.get('/:id/posts', validateUserId, async (req, res) => {
     }
 });
 
-router.delete('/:id', validateUserId, (req, res) => {
-
+router.delete('/:id', validateUserId, async (req, res) => {
+    try {
+        const deleted = await USER_DB.remove(req.params.id);
+        if(!deleted) {
+            res.status(400).json({ message: 'Could not remove user' });
+        } else {
+            res.status(200).json({ message: 'User has been removed' });
+        }
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ message: 'Unable to delete user' });
+    }
 });
 
-router.put('/:id', validateUserId, (req, res) => {
-
+router.put('/:id', validateUserId, async (req, res) => {
+    try {
+        const updated = await USER_DB.update(req.params.id, req.body);
+        if(updated) {
+            res.status(200).json(updated);
+        } else {
+            res.status(400).json({ message: 'Error updating user information' });
+        }
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ message: 'Unable to update user' });
+    }
 });
 
 //custom middleware
