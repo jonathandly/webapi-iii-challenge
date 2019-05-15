@@ -7,7 +7,7 @@ router.post('/', validateUser, (req, res) => {
 
 });
 
-router.post('/:id/posts', validateUserId, (req, res) => {
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
 
 });
 
@@ -20,8 +20,17 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.get('/:id', validateUserId, (req, res) => {
-
+router.get('/:id', validateUserId, async (req, res) => {
+    try {
+        const { id } = await USER_DB.getById(req.params.id);
+        if(id) {
+            res.status(200).json(id);
+        } else {
+            res.status(404).json({ message: `User with ID: ${id} could not be found`});
+        }
+    } catch(err) {
+        res.status(500).json({ message: 'Could not retrieve the user with that ID' });
+    }
 });
 
 router.get('/:id/posts', validateUserId, (req, res) => {
@@ -65,7 +74,13 @@ function validateUser(req, res, next) {
 };
 
 function validatePost(req, res, next) {
-
+    if(!req.body) {
+        res.status(400).json({ message: 'missing post data' });
+        next();
+    } else if(!req.body.text) {
+        res.status(400).json({ message: 'missing required text field' });
+        next();
+    }
 };
 
 module.exports = router;
